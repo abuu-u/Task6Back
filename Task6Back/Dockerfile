@@ -1,20 +1,20 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build
 WORKDIR /src
-COPY ["Task6Back/Task6Back.csproj", "Task6Back/"]
-RUN dotnet restore "Task6Back/Task6Back.csproj"
+COPY *.csproj ./
+RUN dotnet restore
 COPY . .
-WORKDIR "/src/Task6Back"
-RUN dotnet build "Task6Back.csproj" -c Release -o /app/build
+RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Task6Back.csproj" -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish \
+    --runtime alpine-$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \
+    --self-contained true \
+    /p:PublishTrimmed=true
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/runtime-deps:6.0-alpine AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Task6Back.dll"]
+ENTRYPOINT ["./Task6Back"]
