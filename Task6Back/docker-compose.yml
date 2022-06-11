@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  aspnet:
+    container_name: aspnet6
+    build:
+      context: .
+      args:
+        buildnbinfo: 1
+    ports:
+      - "5002:80"
+    networks:
+      aspnet-network:
+networks:
+  aspnet-network:
